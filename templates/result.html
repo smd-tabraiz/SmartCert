@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartCert – Results</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+
+  <nav class="navbar">
+    <div class="logo">
+      <div class="logo-badge">🎓</div><span>Smart<span class="logo-accent">Cert</span></span>
+    </div>
+    <div class="nav-right">
+      <div class="page-steps">
+        <a href="/" class="ps done">① Upload</a>
+        <span class="ps-arrow">›</span>
+        <a href="/" class="ps done">② Compose</a>
+        <span class="ps-arrow">›</span>
+        <span class="ps active">③ Results</span>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-badge">🏁 Step 3 of 3 — Delivery Summary</div>
+    <h1>All Done! <span class="gradient-text">Delivery Report</span></h1>
+    <p class="hero-sub">Finished sending the certificates based on your uploaded CSV and custom message.</p>
+  </header>
+
+  <main class="main-wrap">
+    <div class="result-panel">
+      <div class="result-summary">
+        <div class="rs-header">
+          <div class="rs-title">
+            {% if result.failed == 0 %}
+            🎉 Successfully Delivered!
+            {% else %}
+            📊 Delivery Report ({{ result.failed }} failed)
+            {% endif %}
+          </div>
+          <div class="rs-actions">
+            <a href="/download-report" class="btn-outline download-btn" download="SmartCert_Report.csv">⬇ Download
+              CSV</a>
+            <a href="/download-pdf-report" class="btn-outline download-btn pdf-btn" download="SmartCert_Report.pdf">📄
+              Download PDF</a>
+          </div>
+        </div>
+        <div class="rs-stats">
+          <div class="rs-stat green"><span>{{ result.sent }}</span><small>Sent</small></div>
+          <div class="rs-stat red"><span>{{ result.failed }}</span><small>Failed</small></div>
+          <div class="rs-stat blue"><span>{{ result.total }}</span><small>Total</small></div>
+          <div class="rs-stat pct"><span>{{ (result.sent / result.total * 100)|round|int if result.total > 0 else 0 }}%</span><small>Success
+              Rate</small></div>
+        </div>
+      </div>
+
+      <div class="result-table-wrap">
+        <table class="result-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in result.report %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td><strong>{{ r.name }}</strong></td>
+              <td>{{ r.email }}</td>
+              <td><span class="badge {{ r.status }}">{{ '✓ Sent' if r.status == 'sent' else '✗ Failed' }}</span></td>
+              <td class="reason-cell">{{ r.reason or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="text-align: center;">
+        <a href="/" class="btn-reset">↩ Send Another Batch</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+</body>
+
+</html>

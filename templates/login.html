@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartCert – Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="bg-orbs">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
+        <div class="orb orb3"></div>
+    </div>
+
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-badge">🎓</div><span>Smart<span class="logo-accent">Cert</span></span>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-badge">🔐 Security Gateway</div>
+        <h1>Welcome <span class="gradient-text">Back</span></h1>
+        <p class="hero-sub">Sign in to access your certificate distribution dashboard.</p>
+    </header>
+
+    <main class="main-wrap">
+        <div class="card" style="max-width: 500px; margin: 0 auto;">
+            <form method="POST">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for cat, msg in messages %}
+                <div class="warn-box"
+                    style="margin-bottom: 2rem; color: {{ '#ef4444' if cat == 'error' else '#10b981' }}; background: {{ 'rgba(239, 68, 68, 0.1)' if cat == 'error' else 'rgba(16, 185, 129, 0.1)' }};">
+                    {{ '⚠️' if cat == 'error' else '✅' }} {{ msg }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn-send">
+                    <span>Unlock Dashboard</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+            </form>
+
+            <div class="auth-box">
+                New here?
+                <a href="/signup" class="auth-link">Create account</a>
+            </div>
+        </div>
+    </main>
+
+</body>
+
+</html>

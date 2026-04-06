@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartCert – Compose Email</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="bg-orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+
+<nav class="navbar">
+  <div class="logo"><div class="logo-badge">🎓</div><span>Smart<span class="logo-accent">Cert</span></span></div>
+  <div class="nav-right">
+    <div class="page-steps">
+      <a href="/" class="ps done">① Upload</a>
+      <span class="ps-arrow">›</span>
+      <span class="ps active">② Compose</span>
+      <span class="ps-arrow">›</span>
+      <span class="ps">③ Results</span>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-badge">✉️ Step 2 of 3 — Compose Email</div>
+  <h1>Personalise Your <span class="gradient-text">Message</span></h1>
+  <p class="hero-sub">Write the email that participants will receive. Use <code>{name}</code> to automatically insert each person's name.</p>
+  
+  <div class="safety-toggle-wrap">
+    <label class="switch-label">
+      <div class="switch">
+        <input type="checkbox" name="safety_mode" id="safetyMode" checked>
+        <span class="slider"></span>
+      </div>
+      <div class="switch-text">
+        <strong>Safety Mode</strong>
+        <p>Only send to <span>{{ session.get('user_email') }}</span> for testing.</p>
+      </div>
+    </label>
+  </div>
+</header>
+
+<main class="main-wrap">
+  <form action="/send" method="POST" id="sendForm">
+    <div class="compose-grid">
+      <!-- Editor Column -->
+      <div class="card editor-card">
+        <div class="form-section">
+          <div class="section-title">Email Details</div>
+          <div class="form-group">
+            <label for="subject">Subject Line</label>
+            <input type="text" id="subject" name="subject" class="form-control" value="{{ default_subject }}" required>
+          </div>
+          <div class="form-group">
+            <label for="body">Message Body</label>
+            <textarea id="body" name="body" class="form-control text-editor" required>{{ default_body }}</textarea>
+            <div class="hint-row">
+              <code>{name}</code> = Participant Name
+            </div>
+          </div>
+        </div>
+        
+        <div class="info-footer">
+          <div class="batch-info">
+             <span class="stat-pill">👥 {{ participants|length }} Participants</span>
+             <span class="stat-pill">🏆 {{ cert_count }} Certificates</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-send" id="submitBtn">
+          <span id="btnIcon">🚀</span>
+          <span id="btnText">Send Certificates Now</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+
+      <!-- Preview Column -->
+      <div class="card preview-card">
+        <div class="section-title">Live Preview</div>
+        <p class="section-hint">This is how it will look for the first participant.</p>
+        
+        <div class="email-preview">
+            <div class="preview-header">
+                <div class="p-row"><span>To:</span> <strong id="previewTo">{{ participants[0].email if participants else 'example@mail.com' }}</strong></div>
+                <div class="p-row"><span>Subject:</span> <strong id="previewSubject">{{ default_subject }}</strong></div>
+            </div>
+            <div class="preview-body" id="previewBody">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="attachment-preview">
+                📎 Attachment: <strong>{{ participants[0].name.replace(' ', '_') }}_certificate.pdf</strong>
+            </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</main>
+
+<div id="progressOverlay" class="progress-overlay hidden">
+  <div class="progress-card">
+    <div class="progress-spinner"></div>
+    <div class="progress-title">Sending Certificates…</div>
+    <div class="progress-sub">Connecting to SMTP and delivering emails</div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const firstName = "{{ participants[0].name if participants else 'Participant' }}";
+  
+  function updatePreview() {
+    $('previewSubject').textContent = $('subject').value || '(No Subject)';
+    const body = $('body').value;
+    $('previewBody').innerText = body.replace(/{name}/g, firstName);
+  }
+
+  $('subject').addEventListener('input', updatePreview);
+  $('body').addEventListener('input', updatePreview);
+  updatePreview();
+
+  $('sendForm').addEventListener('submit', () => {
+    $('progressOverlay').classList.remove('hidden');
+    let p=0; const bar=$('progressBar');
+    const iv=setInterval(()=>{ p=Math.min(p+Math.random()*8,95); bar.style.width=p+'%'; },500);
+  });
+</script>
+</body>
+</html>

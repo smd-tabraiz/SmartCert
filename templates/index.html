@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SmartCert – Upload participants and certificates to send bulk personalised emails.">
+  <title>SmartCert – Upload</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+
+  <nav class="navbar">
+    <div class="logo">
+      <div class="logo-badge">🎓</div><span>Smart<span class="logo-accent">Cert</span></span>
+    </div>
+    <div class="nav-right">
+      <div class="page-steps">
+        <span class="ps active">① Upload</span>
+        <span class="ps-arrow">›</span>
+        <span class="ps">② Compose</span>
+        <span class="ps-arrow">›</span>
+        <span class="ps">③ Results</span>
+      </div>
+      <div class="user-info">
+        <span class="user-greeting">Hi, {{ user_name or 'Admin' }}</span>
+        <a href="/logout" class="logout-btn">Logout</a>
+      </div>
+      <div id="healthDot" class="health-dot" title="Checking…"></div>
+      <span id="healthLabel" class="health-label">Checking…</span>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-badge">✨ Step 1 of 3 — Upload Files</div>
+    <h1>Send Certificates at <span class="gradient-text">Scale</span></h1>
+    <p class="hero-sub">Upload your participant list and certificate files. Then compose a personalised email on the
+      next step.</p>
+  </header>
+
+  <main class="main-wrap">
+    <form id="uploadForm" action="/compose" method="POST" enctype="multipart/form-data">
+      <div class="card">
+
+        <!-- Step 1: CSV -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-num">1</div>
+            <div>
+              <div class="section-title">Participants CSV</div>
+              <div class="section-hint">Required columns: <code>Participant Name</code>, <code>Email</code> and
+                <code> (Optional) File Name</code>
+              </div>
+            </div>
+            <a href="#" class="csv-template-link" id="downloadTemplate">⬇ Sample CSV</a>
+          </div>
+          <div class="drop-zone" id="csvDrop" tabindex="0" role="button">
+            <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+            <div class="dz-content">
+              <div class="dz-icon">📄</div>
+              <div class="dz-text">Drag & drop your CSV here</div>
+              <div class="dz-sub">or <span class="dz-browse">click to browse</span></div>
+              <div class="dz-filename" id="csvName"></div>
+            </div>
+          </div>
+          <!-- Preview -->
+          <div id="csvPreview" class="preview-table-wrap hidden">
+            <div class="preview-header">
+              <span id="previewCount"></span>
+              <button type="button" class="clear-btn" id="clearCsv">✕ Clear</button>
+            </div>
+            <div class="preview-scroll">
+              <table class="preview-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                  </tr>
+                </thead>
+                <tbody id="previewBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Certificates -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-num">2</div>
+            <div>
+              <div class="section-title">Certificate Files</div>
+              <div class="section-hint">PDF, PNG, JPG — one per participant, in CSV row order</div>
+            </div>
+          </div>
+          <div class="drop-zone" id="certDrop" tabindex="0" role="button">
+            <input type="file" id="certificates" name="certificates" accept=".pdf,.png,.jpg,.jpeg" multiple required>
+            <div class="dz-content">
+              <div class="dz-icon">🏆</div>
+              <div class="dz-text">Drag & drop certificates here</div>
+              <div class="dz-sub">or <span class="dz-browse">click to browse</span></div>
+              <div class="dz-filename" id="certName"></div>
+            </div>
+          </div>
+          <div id="certList" class="cert-list hidden"></div>
+        </div>
+
+        <!-- Mismatch warning -->
+        <div id="mismatchWarn" class="warn-box hidden">
+          ⚠️ <strong>Count mismatch:</strong> <span id="mismatchMsg"></span>
+        </div>
+
+        <!-- Continue button -->
+        <button type="submit" class="btn-send" id="submitBtn">
+          <span id="btnIcon">✉️</span>
+          <span id="btnText">Continue to Compose Email</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <!-- Upload progress overlay -->
+  <div id="progressOverlay" class="progress-overlay hidden">
+    <div class="progress-card">
+      <div class="progress-spinner"></div>
+      <div class="progress-title">Uploading Files…</div>
+      <div class="progress-sub">Saving your CSV and certificates</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    // Health check
+    (async () => {
+      try {
+        const d = await (await fetch('/health')).json();
+        $('healthDot').className = 'health-dot ' + (d.email_configured ? 'green' : 'yellow');
+        $('healthLabel').textContent = d.email_configured ? 'Email configured' : 'Email not configured';
+        if (!d.email_configured) showToast('⚠️ Email not configured. Fill in .env first!', 'warn');
+      } catch { $('healthDot').className = 'health-dot red'; $('healthLabel').textContent = 'Server offline'; }
+    })();
+
+    function showToast(msg, type = 'info') {
+      const t = $('toast'); t.textContent = msg;
+      t.className = `toast toast-${type}`; t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+
+    // Sample CSV
+    $('downloadTemplate').addEventListener('click', e => {
+      e.preventDefault();
+      const a = document.createElement('a');
+      a.href = 'data:text/csv,' + encodeURIComponent('name,email\nAlice Smith,alice@example.com\nBob Jones,bob@example.com\n');
+      a.download = 'participants_sample.csv'; a.click();
+    });
+
+    // Drop zone setup
+    function setupDropZone(zoneId, inputId, onFiles) {
+      const zone = $(zoneId), input = $(inputId);
+      zone.addEventListener('click', () => input.click());
+      zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') input.click(); });
+      input.addEventListener('change', () => onFiles(input.files));
+      zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dz-active'); });
+      zone.addEventListener('dragleave', e => { if (!zone.contains(e.relatedTarget)) zone.classList.remove('dz-active'); });
+      zone.addEventListener('drop', e => {
+        e.preventDefault(); zone.classList.remove('dz-active');
+        try { input.files = e.dataTransfer.files; } catch { }
+        onFiles(e.dataTransfer.files);
+      });
+    }
+
+    let csvCount = 0, certCount = 0;
+
+    setupDropZone('csvDrop', 'csv_file', async files => {
+      const file = files[0]; if (!file) return;
+      $('csvName').textContent = file.name;
+      $('csvDrop').classList.add('dz-filled');
+      const fd = new FormData(); fd.append('csv_file', file);
+      try {
+        const d = await (await fetch('/preview-csv', { method: 'POST', body: fd })).json();
+        if (d.error) { showToast('CSV error: ' + d.error, 'error'); return; }
+        csvCount = d.count;
+        $('previewBody').innerHTML = d.rows.map((r, i) => `<tr><td>${i + 1}</td><td>${r.name}</td><td>${r.email}</td></tr>`).join('');
+        $('previewCount').textContent = `${d.count} participant${d.count !== 1 ? 's' : ''} found`;
+        $('csvPreview').classList.remove('hidden');
+        checkMismatch();
+      } catch { showToast('Failed to read CSV', 'error'); }
+    });
+
+    $('clearCsv').addEventListener('click', () => {
+      $('csv_file').value = ''; $('csvName').textContent = '';
+      $('csvDrop').classList.remove('dz-filled');
+      $('csvPreview').classList.add('hidden');
+      csvCount = 0; checkMismatch();
+    });
+
+    setupDropZone('certDrop', 'certificates', files => {
+      certCount = files.length;
+      $('certName').textContent = `${certCount} file${certCount !== 1 ? 's' : ''} selected`;
+      $('certDrop').classList.add('dz-filled');
+      const list = $('certList');
+      list.innerHTML = Array.from(files).map((f, i) =>
+        `<div class="cert-item"><span class="cert-idx">${i + 1}</span><span class="cert-fname">${f.name}</span><span class="cert-size">${(f.size / 1024).toFixed(0)} KB</span></div>`
+      ).join('');
+      list.classList.remove('hidden');
+      checkMismatch();
+    });
+
+    function checkMismatch() {
+      const w = $('mismatchWarn');
+      if (csvCount > 0 && certCount > 0 && csvCount !== certCount) {
+        $('mismatchMsg').textContent = `CSV has ${csvCount} participant(s) but ${certCount} certificate(s) were uploaded.`;
+        w.classList.remove('hidden');
+      } else { w.classList.add('hidden'); }
+    }
+
+    // Show progress on submit
+    $('uploadForm').addEventListener('submit', () => {
+      $('progressOverlay').classList.remove('hidden');
+      let p = 0; const bar = $('progressBar');
+      const iv = setInterval(() => { p = Math.min(p + Math.random() * 12, 88); bar.style.width = p + '%'; }, 300);
+    });
+  </script>
+</body>
+
+</html>

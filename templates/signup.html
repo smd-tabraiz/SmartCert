@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartCert – Sign Up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="bg-orbs">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
+        <div class="orb orb3"></div>
+    </div>
+
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-badge">🎓</div><span>Smart<span class="logo-accent">Cert</span></span>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-badge">🆕 Create Profile</div>
+        <h1>Join <span class="gradient-text">SmartCert</span></h1>
+        <p class="hero-sub">Enter your details and the provided authentication key to join your organization.</p>
+    </header>
+
+    <main class="main-wrap">
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <form method="POST">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for cat, msg in messages %}
+                <div class="warn-box"
+                    style="margin-bottom: 2rem; color: {{ '#ef4444' if cat == 'error' else '#10b981' }}; background: {{ 'rgba(239, 68, 68, 0.1)' if cat == 'error' else 'rgba(16, 185, 129, 0.1)' }};">
+                    {{ '⚠️' if cat == 'error' else '✅' }} {{ msg }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <div class="compose-grid">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Work Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="name@company.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📍 Authentication Key</label>
+                    <input type="password" name="auth_key" class="form-control" placeholder="Provided by administrator"
+                        required>
+                    <small style="color: var(--muted2); font-size: 0.75rem; margin-top: 0.3rem;">Required to verify your
+                        organization membership.</small>
+                </div>
+
+                <div style="margin: 2rem 0 1rem; font-size: 1rem; font-weight: 800; color: var(--accent2);">📧 Email
+                    Sending Credentials (SMTP)</div>
+                <p style="font-size: 0.85rem; color: var(--muted2); margin-bottom: 2rem;">Recommended: Use a Gmail
+                    Account with an <strong>App Password</strong>.</p>
+
+                <div class="compose-grid">
+                    <div class="form-group">
+                        <label>SMTP Sender Email</label>
+                        <input type="email" name="smtp_user" class="form-control" placeholder="your_email@gmail.com"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label>SMTP App Password <span class="info-icon" onclick="openModal()">ⓘ</span></label>
+                        <input type="password" name="smtp_pass" class="form-control" placeholder="16-character code"
+                            required>
+                    </div>
+                </div>
+
+                <div class="compose-grid">
+                    <div class="form-group">
+                        <label>Account Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <input type="password" name="confirm_password" class="form-control" placeholder="••••••••"
+                            required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-send">
+                    <span>Create Secure Member Account</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+            </form>
+
+            <div class="auth-box">
+                Already a member?
+                <a href="/login" class="auth-link">Login instead</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- App Password Guide Modal -->
+    <div id="appModal" class="modal" onclick="if(event.target===this)closeModal()">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3 style="margin-bottom: 1rem; font-size: 1.2rem; font-weight: 800;">🔑 Get Gmail App Password</h3>
+            <p class="modal-warning">⚠️ Use an App Password — not your regular Gmail password</p>
+            <ol class="modal-steps">
+                <li>Go to <strong>Google Account</strong> → <strong>Security</strong></li>
+                <li>Enable <strong>2-Step Verification</strong></li>
+                <li>Search for <strong>"App Passwords"</strong></li>
+                <li>Select app: <strong>Mail</strong>, device: <strong>Other</strong></li>
+                <li>Click <strong>Generate</strong></li>
+                <li>Copy the <strong>16-character code</strong> and paste it here</li>
+            </ol>
+            <a href="https://myaccount.google.com/apppasswords" target="_blank" class="modal-link">Open App Passwords
+                →</a>
+        </div>
+    </div>
+
+    <script>
+        function openModal() { document.getElementById("appModal").style.display = "flex"; }
+        function closeModal() { document.getElementById("appModal").style.display = "none"; }
+    </script>
+
+</body>
+
+</html>
