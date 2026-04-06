@@ -76,6 +76,50 @@ Open your browser and navigate to: **http://127.0.0.1:5000**
 
 ---
 
+## ☁️ Deploy to Render
+
+### 1. Push to GitHub
+Make sure your project is pushed to a GitHub repository.
+
+> ⚠️ **Add a `.gitignore`** to avoid committing secrets:
+> ```
+> .env
+> smartcert.db
+> uploads/
+> renamed_certificates/
+> __pycache__/
+> ```
+
+### 2. Create a new Web Service on Render
+- Go to [render.com](https://render.com) → **New → Web Service**
+- Connect your GitHub repo
+- Set the following:
+
+| Setting | Value |
+|---------|-------|
+| **Runtime** | Python 3 |
+| **Build Command** | `pip install -r requirements.txt` |
+| **Start Command** | `gunicorn app:app` |
+
+### 3. Add Environment Variables on Render
+In your Render service → **Environment** tab, add:
+
+| Key | Value |
+|-----|-------|
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_PORT` | `587` |
+| `SENDER_EMAIL` | `your_email@gmail.com` |
+| `SENDER_PASSWORD` | `your_app_password` |
+| `SECRET_KEY` | `any-random-secret-string` |
+
+### 4. Deploy
+Click **Deploy** — Render will install dependencies and start gunicorn automatically.
+
+> ⚠️ **Important — Ephemeral Storage:**  
+> Render's free tier uses ephemeral storage. Uploaded files and the SQLite database are **wiped on every redeploy**. For persistent data, use [Render Disks](https://render.com/docs/disks) (paid) or migrate to PostgreSQL.
+
+---
+
 ## 🚀 How to Use
 
 ### Step 1 — Sign Up

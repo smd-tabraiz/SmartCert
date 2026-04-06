@@ -1,0 +1,25 @@
+# Secrets & config
+.env
+
+# Database
+smartcert.db
+
+# Uploaded & generated files
+uploads/
+renamed_certificates/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# OS files
+.DS_Store
+Thumbs.db
